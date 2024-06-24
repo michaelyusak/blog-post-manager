@@ -1,34 +1,36 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpStatus,
+  HttpException,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { response } from './dto/response';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
+  create(@Body() createUserDto: CreateUserDto): response {
+    if (
+      !createUserDto.email ||
+      !createUserDto.name ||
+      !createUserDto.password
+    ) {
+      throw new HttpException('data incomplete', HttpStatus.BAD_REQUEST);
+    }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
-  }
+    const existingUserId = this.userService.findUser(createUserDto.email);
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
-  }
+    if (existingUserId) {
+      throw new HttpException('email already registered', HttpStatus.FORBIDDEN);
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
+    const result = this.userService.registerUser(createUserDto);
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+    return { message: 'user successfully registered', data: result };
   }
 }
