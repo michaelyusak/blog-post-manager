@@ -17,11 +17,11 @@ export class UserService {
     return { id: result.insertId, name: name, email: email };
   }
 
-  async findUser(userEmail: string): Promise<number> {
+  async findUserByEmail(userEmail: string): Promise<number> {
     const connection = this.dbService.getConnection();
 
     const [results] = await connection.execute(
-      'SELECT user_id FROM users WHERE user_email = ?',
+      'SELECT user_id FROM users WHERE user_email = ? AND deleted_at IS NULL',
       [userEmail.toLowerCase()],
     );
 
@@ -30,6 +30,17 @@ export class UserService {
     }
 
     return results[0].user_id;
+  }
+
+  async findUserById(id: number) {
+    const connection = this.dbService.getConnection();
+
+    const [results] = await connection.execute(
+      'SELECT user_id FROM users WHERE user_id = ? AND deleted_at IS NULL;',
+      [id],
+    );
+
+    return results;
   }
 
   async getUserPassword(userId: number): Promise<string> {

@@ -35,7 +35,9 @@ export class UserController {
       throw new HttpException('data incomplete', HttpStatus.BAD_REQUEST);
     }
 
-    const existingUserId = await this.userService.findUser(createUserDto.email);
+    const existingUserId = await this.userService.findUserByEmail(
+      createUserDto.email,
+    );
 
     if (existingUserId) {
       throw new HttpException('email already registered', HttpStatus.FORBIDDEN);
@@ -61,7 +63,9 @@ export class UserController {
       throw new HttpException('data incomplete', HttpStatus.BAD_REQUEST);
     }
 
-    const existingUserId = await this.userService.findUser(loginDto.email);
+    const existingUserId = await this.userService.findUserByEmail(
+      loginDto.email,
+    );
 
     if (!existingUserId) {
       throw new HttpException('email not registered', HttpStatus.UNAUTHORIZED);
