@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ResultSetHeader } from 'mysql2';
 import { DatabaseService } from 'src/database.service';
+import { response } from './dto/response';
 
 @Injectable()
 export class PostService {
@@ -14,7 +15,12 @@ export class PostService {
       [content, authorId],
     );
 
-    return `Successfully created a post with id #${result.insertId}`;
+    const response: response = {
+      message: `Successfully created a post with id #${result.insertId}`,
+      data: null,
+    };
+
+    return response;
   }
 
   async findAllPost() {
@@ -35,6 +41,10 @@ export class PostService {
       [id],
     );
 
+    if (!results[0]) {
+      return undefined;
+    }
+
     return results;
   }
 
@@ -42,14 +52,31 @@ export class PostService {
     const connection = this.dbService.getConnection();
 
     await connection.execute(
-      'UPDATE posts SET content = ? WHERE post_id = ? AND deleted_at IS NULL',
+      'UPDATE posts SET content = ?, updated_at = NOW() WHERE post_id = ? AND deleted_at IS NULL',
       [content, id],
     );
 
-    return `#${id} post successfully updated`;
+    const response: response = {
+      message: `#${id} post successfully updated`,
+      data: null,
+    };
+
+    return response;
   }
 
-  removeOnePost(id: number) {
-    return `This action removes a #${id} post`;
+  async removeOnePost(id: number) {
+    const connection = this.dbService.getConnection();
+
+    await connection.execute(
+      'UPDATE posts SET deleted_at = NOW(), updated_at = NOW() WHERE post_id = ? AND deleted_at IS NULL',
+      [id],
+    );
+
+    const response: response = {
+      message: `#${id}post successfully deleted`,
+      data: null,
+    };
+
+    return response;
   }
 }

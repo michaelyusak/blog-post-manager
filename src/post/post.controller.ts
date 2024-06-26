@@ -9,6 +9,8 @@ import {
   UseGuards,
   Req,
   UnauthorizedException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -52,7 +54,11 @@ export class PostController {
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
   ) {
-    const existingPost = await this.findOne(id);
+    const existingPost = await this.postService.findOnePost(+id);
+
+    if (!existingPost) {
+      throw new HttpException('post do not exist', HttpStatus.BAD_REQUEST);
+    }
 
     if (existingPost[0].author_id != req.userId) {
       throw new UnauthorizedException();
@@ -61,8 +67,19 @@ export class PostController {
     return this.postService.updateOnePost(+id, updatePostDto.content);
   }
 
+  @UseGuards(PostGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Req() req, @Param('id') id: string) {
+    const existingPost = await this.postService.findOnePost(+id);
+
+    if (!existingPost) {
+      throw new HttpException('post do not exist', HttpStatus.BAD_REQUEST);
+    }
+
+    if (existingPost[0].author_id != req.userId) {
+      throw new UnauthorizedException();
+    }
+
     return this.postService.removeOnePost(+id);
   }
 }
