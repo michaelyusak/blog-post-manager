@@ -14,24 +14,35 @@ import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostGuard } from './post.guard';
+import { UserService } from 'src/user/user.service';
 
 @Controller('post')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    private readonly userService: UserService,
+  ) {}
 
+  @UseGuards(PostGuard)
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postService.create(createPostDto);
+  async create(@Req() req, @Body() createPostDto: CreatePostDto) {
+    const existingUser = this.userService.findUserById(req.userId);
+
+    if (!existingUser) {
+      throw new UnauthorizedException();
+    }
+
+    return this.postService.createOnePost(req.userId, createPostDto.content);
   }
 
   @Get()
   findAll() {
-    return this.postService.findAll();
+    return this.postService.findAllPost();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.postService.findOne(+id);
+    return this.postService.findOnePost(+id);
   }
 
   @UseGuards(PostGuard)
@@ -47,11 +58,11 @@ export class PostController {
       throw new UnauthorizedException();
     }
 
-    return this.postService.update(+id, updatePostDto.content);
+    return this.postService.updateOnePost(+id, updatePostDto.content);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.postService.remove(+id);
+    return this.postService.removeOnePost(+id);
   }
 }

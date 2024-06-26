@@ -1,18 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { ResultSetHeader } from 'mysql2';
 import { DatabaseService } from 'src/database.service';
-import { Post } from './entities/post.entity';
 
 @Injectable()
 export class PostService {
   constructor(private readonly dbService: DatabaseService) {}
 
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+  async createOnePost(authorId: number, content: string) {
+    const connection = this.dbService.getConnection();
+
+    const [result] = await connection.query<ResultSetHeader>(
+      'INSERT INTO posts (content, author_id) VALUES (?, ?)',
+      [content, authorId],
+    );
+
+    return `Successfully created a post with id #${result.insertId}`;
   }
 
-  async findAll() {
+  async findAllPost() {
     const connection = this.dbService.getConnection();
 
     const [results] = await connection.execute(
@@ -22,7 +27,7 @@ export class PostService {
     return results;
   }
 
-  async findOne(id: number) {
+  async findOnePost(id: number) {
     const connection = this.dbService.getConnection();
 
     const [results] = await connection.execute(
@@ -33,7 +38,7 @@ export class PostService {
     return results;
   }
 
-  async update(id: number, content: string) {
+  async updateOnePost(id: number, content: string) {
     const connection = this.dbService.getConnection();
 
     await connection.execute(
@@ -44,7 +49,7 @@ export class PostService {
     return `#${id} post successfully updated`;
   }
 
-  remove(id: number) {
+  removeOnePost(id: number) {
     return `This action removes a #${id} post`;
   }
 }
