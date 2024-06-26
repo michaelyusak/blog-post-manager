@@ -22,12 +22,26 @@ export class PostService {
     return results;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: number) {
+    const connection = this.dbService.getConnection();
+
+    const [results] = await connection.execute(
+      'SELECT p.post_id, p.author_id, u.user_name as author_name, p.content, p.created_at, p.updated_at FROM posts p JOIN users u ON u.user_id = p.author_id WHERE p.post_id = ? AND p.deleted_at IS NULL AND u.deleted_at IS NULL;',
+      [id],
+    );
+
+    return results;
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(id: number, content: string) {
+    const connection = this.dbService.getConnection();
+
+    await connection.execute(
+      'UPDATE posts SET content = ? WHERE post_id = ? AND deleted_at IS NULL',
+      [content, id],
+    );
+
+    return `#${id} post successfully updated`;
   }
 
   remove(id: number) {

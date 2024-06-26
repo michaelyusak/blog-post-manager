@@ -15,13 +15,13 @@ import { LoginDto } from './dto/login.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  bcrypt = require('bcrypt');
+  private bcrypt = require('bcrypt');
 
-  dotenv = require('dotenv');
+  private dotenv = require('dotenv');
 
-  saltRounds = process.env.SALT_ROUNDS;
+  private saltRounds = process.env.SALT_ROUNDS;
 
-  jwt = require('jsonwebtoken');
+  private jwt = require('jsonwebtoken');
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto): Promise<response> {
@@ -88,6 +88,6 @@ export class UserController {
 
     const token = this.jwt.sign(claims, process.env.JWT_SECRET);
 
-    return { message: 'Login success', data: { token: token } };
+    return { message: 'Login success', data: { token: `Bearer ${token}` } };
   }
 }
