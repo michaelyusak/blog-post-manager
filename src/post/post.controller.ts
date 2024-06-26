@@ -6,10 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PostGuard } from './post.guard';
 
 @Controller('post')
 export class PostController {
@@ -30,9 +34,20 @@ export class PostController {
     return this.postService.findOne(+id);
   }
 
+  @UseGuards(PostGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postService.update(+id, updatePostDto);
+  async update(
+    @Req() req,
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+  ) {
+    const existingPost = await this.findOne(id);
+
+    if (existingPost[0].author_id != req.userId) {
+      throw new UnauthorizedException();
+    }
+
+    return this.postService.update(+id, updatePostDto.content);
   }
 
   @Delete(':id')
